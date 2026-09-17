@@ -23,11 +23,6 @@ export default function App() {
     const [isLoading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    console.log(statuses);
-
-    const gamesList = games.map(game => <li key={game.gameId}>{game.gameTitle}, {statuses[game.statusId]}, {consoles[game.consoleId]}, {game.score}</li>);
-
-
     useEffect(() => {
         async function loadData() {
             try {
@@ -56,9 +51,7 @@ export default function App() {
     return (
         <div>
             <h1>Cool stuff coming soon🔥</h1>
-            <ul>
-                {gamesList}
-            </ul>
+            {buildGamesList(games, statuses, consoles)}
         </div>
     );
 }
@@ -95,5 +88,38 @@ async function fetchConsoles(): Promise<Record<number, string>> {
 function toKeyValPair<T extends KeyValPair>(items: T[]): Record<number, string> {
     return Object.fromEntries(
         items.map(({ id:key, name:value }) => [key, value])
+    );
+}
+
+function buildGamesList(games: Game[], statuses: Record<number, string>, consoles: Record<number, string>) {
+    return (
+        <div className='games-list'>
+            {buildGamesTable(games, statuses, consoles)}
+        </div>
+    );
+}
+
+function buildGamesTable(games: Game[], statuses: Record<number, string>, consoles: Record<number, string>) {
+    const tableRows = games.map((game) => {
+        return (
+            <tr>
+                <td>{game.gameTitle}</td>
+                <td>{statuses[game.statusId]}</td>
+                <td>{consoles[game.consoleId]}</td>
+                <td>{game.score}</td>
+            </tr>
+        );
+    })
+    
+    return (
+        <table className='games-table'>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Console</th>
+                <th>Score</th>
+            </tr>
+            {tableRows}
+        </table>
     );
 }
