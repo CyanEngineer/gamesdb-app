@@ -17,33 +17,11 @@ type KeyValPair = {
 }
 
 export default function App() {
-    const [games, setGames] = useState<Game[]>([]);
-    const [statuses, setStatuses] = useState<Record<number, string>>({});
-    const [consoles, setConsoles] = useState<Record<number, string>>({});
-    const [isLoading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const { games, page, totalPages, isLoading:isLoadingGames, error: errorGames, goNext, goPrev, goTo } = usePaginatedGames();
+    const { statuses, consoles, isLoading:isLoadingStatusesConsoles, error:errorStatusesConsoles } = useStatusesConsoles();
 
-    useEffect(() => {
-        async function loadData() {
-            try {
-                const [fetchedGames, fetchedStatuses, fetchedConsoles] = await Promise.all([
-                    fetchGames(),
-                    fetchStatuses(),
-                    fetchConsoles()
-                ]);
-
-                setGames(fetchedGames);
-                setStatuses(fetchedStatuses);
-                setConsoles(fetchedConsoles);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Something went wrong");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadData();
-    }, []);
+    const isLoading = isLoadingGames || isLoadingStatusesConsoles
+    const error = errorGames || errorStatusesConsoles
 
     if (isLoading) return <p>Loading...</p>;
     if (error) return <p>Error: {error}</p>;
@@ -51,18 +29,30 @@ export default function App() {
     return (
         <div>
             <h1>Cool stuff coming soon🔥</h1>
-            {buildGamesList(games, statuses, consoles)}
+            <GamesList games={games} statuses={statuses} consoles={consoles} />
         </div>
     );
 }
 
-async function fetchGames(): Promise<Game[]> {
-    const response = await fetch(`${API_URL}/games`);
-    if (!response.ok) throw new Error("Failed to fetch games");
+function useStatusesConsoles() {
+    const [statuses, setStatuses] = useState<Record<number, string>>({});
+    const [consoles, setConsoles] = useState<Record<number, string>>({});
+    const [isLoading, setLoading] = useState(false);
+    const [error, setError] = useState<string|undefined>();
 
-    const json = await response.json();
+    useEffect(() => {
+        setLoading(true);
+        try {
+            fetchStatuses().then(s => setStatuses(s));
+            fetchConsoles().then(c => setConsoles(c));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    return json._embedded?.gameResponseList ?? [];
+    return { statuses, consoles, isLoading, error};
 }
 
 async function fetchStatuses(): Promise<Record<number, string>> {
@@ -91,18 +81,49 @@ function toKeyValPair<T extends KeyValPair>(items: T[]): Record<number, string> 
     );
 }
 
-function buildGamesList(games: Game[], statuses: Record<number, string>, consoles: Record<number, string>) {
+function usePaginatedGames(initial = 0) {
+    const [page, setPage] = useState(initial);
+    const [totalPages, setTotalPages] = useState(0);
+    const [games, setGames] = useState<Game[]>([]);
+    const [isLoading, setLoading] = useState(false);
+    const [error, setError] = useState<string|undefined>();
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        fetch(`${API_URL}/games?page=${page}`)
+            .then(r => r.json())
+            .then(json => {
+                if (cancelled) return;
+                setTotalPages(json.page?.totalPages);
+                setGames(json._embedded?.gameResponseList ?? []);
+            })
+            .catch(e => { if (!cancelled) setError(e.message); })
+            .finally(() => { if (!cancelled) setLoading(false); });
+        
+        return () => { cancelled = true; };
+    }, [page]);
+
+    return {
+        games, page, totalPages, isLoading, error,
+        goNext: () => setPage(p => (totalPages ? Math.min(totalPages, p + 1) : p + 1)),
+        goPrev: () => setPage(p => (Math.max(1, p - 1))),
+        goTo: (p: number) => setPage(p)
+    };
+}
+
+function GamesList({games, statuses, consoles }: { games: Game[], statuses: Record<number, string>, consoles: Record<number, string> }) {
     return (
         <div className='games-list'>
-            {buildGamesTable(games, statuses, consoles)}
+            <GamesTable games={games} statuses={statuses} consoles={consoles} />
         </div>
     );
 }
 
-function buildGamesTable(games: Game[], statuses: Record<number, string>, consoles: Record<number, string>) {
+function GamesTable({games, statuses, consoles }: { games: Game[], statuses: Record<number, string>, consoles: Record<number, string> }) {
     const tableRows = games.map((game) => {
         return (
-            <tr>
+            <tr key={game.gameId}>
                 <td>{game.gameTitle}</td>
                 <td>{statuses[game.statusId]}</td>
                 <td>{consoles[game.consoleId]}</td>
@@ -113,13 +134,17 @@ function buildGamesTable(games: Game[], statuses: Record<number, string>, consol
     
     return (
         <table className='games-table'>
-            <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Console</th>
-                <th>Score</th>
-            </tr>
-            {tableRows}
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Console</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {tableRows}
+            </tbody>
         </table>
     );
 }
