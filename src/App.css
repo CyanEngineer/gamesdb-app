@@ -11,6 +11,23 @@ td, th {
     padding: 8px;
 }
 
+.title-header {
+    width: 55%;
+}
+
+.status-header, .console-header, .score-header {
+    width: 15%;
+}
+
 tr:nth-child(even) {
     background-color: #eeeeee;
+}
+
+.navigation-bar {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    height: 32px;
+    justify-content: center;
+    align-items: center;
 }

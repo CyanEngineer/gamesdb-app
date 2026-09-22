@@ -27,9 +27,9 @@ export default function App() {
     if (error) return <p>Error: {error}</p>;
 
     return (
-        <div>
-            <h1>Cool stuff coming soon🔥</h1>
-            <GamesList games={games} statuses={statuses} consoles={consoles} />
+        <div className='games-list'>
+            <GamesTable games={games} statuses={statuses} consoles={consoles} />
+            <GamesNavigationBar page={page + 1} totalPages={totalPages} goNext={goNext} goPrev={goPrev} goTo={goTo} />
         </div>
     );
 }
@@ -106,18 +106,10 @@ function usePaginatedGames(initial = 0) {
 
     return {
         games, page, totalPages, isLoading, error,
-        goNext: () => setPage(p => (totalPages ? Math.min(totalPages, p + 1) : p + 1)),
-        goPrev: () => setPage(p => (Math.max(1, p - 1))),
+        goNext: () => setPage(p => (totalPages ? Math.min(totalPages - 1, p + 1) : p + 1)),
+        goPrev: () => setPage(p => (Math.max(0, p - 1))),
         goTo: (p: number) => setPage(p)
     };
-}
-
-function GamesList({games, statuses, consoles }: { games: Game[], statuses: Record<number, string>, consoles: Record<number, string> }) {
-    return (
-        <div className='games-list'>
-            <GamesTable games={games} statuses={statuses} consoles={consoles} />
-        </div>
-    );
 }
 
 function GamesTable({games, statuses, consoles }: { games: Game[], statuses: Record<number, string>, consoles: Record<number, string> }) {
@@ -136,10 +128,10 @@ function GamesTable({games, statuses, consoles }: { games: Game[], statuses: Rec
         <table className='games-table'>
             <thead>
                 <tr>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Console</th>
-                    <th>Score</th>
+                    <th className='title-header'>Title</th>
+                    <th className='status-header'>Status</th>
+                    <th className='console-header'>Console</th>
+                    <th className='score-header'>Score</th>
                 </tr>
             </thead>
             <tbody>
@@ -147,4 +139,14 @@ function GamesTable({games, statuses, consoles }: { games: Game[], statuses: Rec
             </tbody>
         </table>
     );
+}
+
+function GamesNavigationBar({ page, totalPages, goNext, goPrev, goTo }: { page: number, totalPages: number, goNext: Function, goPrev: Function, goTo: Function }) {
+    return (
+        <div className='navigation-bar'>
+            <button onClick={() => goPrev()}>Prev</button>
+            <div>{page}/{totalPages}</div>
+            <button onClick={() => goNext()}>Next</button>
+        </div>
+    )
 }
