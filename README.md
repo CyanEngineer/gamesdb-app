@@ -9,11 +9,14 @@ Yup, that's all for now - but we're just getting started
 ### Improvements
 - Add `go to` in navigation bar
 - Styling
+- Icon
 ### TBD
 - Standard sorting
   - 1st `Status`, 2nd `Title`?
 - Should data be fetched anew when updates are made?
-### Table functionality
+### Games table
+- ~~Table with all games~~
+- ~~Page navigation~~
 - Selectable rows
 - Sort by column
   - Make `Title` sort by `sortingName`
