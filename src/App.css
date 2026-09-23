@@ -31,3 +31,43 @@ tr:nth-child(even) {
     justify-content: center;
     align-items: center;
 }
+
+.navigation-button {
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    :active {
+        padding-top: 2px;
+    }
+
+    img {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.navigation-button:disabled {
+    opacity: 50%;
+    cursor: default;
+
+    :active {
+        padding: 0px;
+    }
+}
+
+.page-info {
+    display: flex;
+    flex-direction: row;
+}
+
+.page-number-left {
+    width: 25px;
+    text-align: right;
+}
+
+.page-number-right {
+    width: 25px;
+    text-align: left;
+}

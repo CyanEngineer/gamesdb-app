@@ -1,6 +1,8 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
 import { useEffect, useState } from 'react';
+import PrevIcon from './assets/prev.svg';
+import NextIcon from './assets/next.svg';
 
 type Game = {
     gameId: number;
@@ -29,7 +31,7 @@ export default function App() {
     return (
         <div className='games-list'>
             <GamesTable games={games} statuses={statuses} consoles={consoles} />
-            <GamesNavigationBar page={page + 1} totalPages={totalPages} goNext={goNext} goPrev={goPrev} goTo={goTo} />
+            <GamesNavigationBar page={page} totalPages={totalPages} goNext={goNext} goPrev={goPrev} goTo={goTo} />
         </div>
     );
 }
@@ -142,11 +144,22 @@ function GamesTable({games, statuses, consoles }: { games: Game[], statuses: Rec
 }
 
 function GamesNavigationBar({ page, totalPages, goNext, goPrev, goTo }: { page: number, totalPages: number, goNext: Function, goPrev: Function, goTo: Function }) {
+    const isOnFirstPage = page == 0;
+    const isOnLastPage = page == totalPages-1;
+
     return (
         <div className='navigation-bar'>
-            <button onClick={() => goPrev()}>Prev</button>
-            <div>{page}/{totalPages}</div>
-            <button onClick={() => goNext()}>Next</button>
+            <button className='navigation-button' disabled={isOnFirstPage} onClick={() => goPrev()}>
+                <img src={PrevIcon} alt='Previous page' />
+            </button>
+            <div className='page-info'>
+                <div className='page-number-left'>{page+1}</div>
+                /
+                <div className='page-number-right'>{totalPages}</div>
+            </div>
+            <button className='navigation-button' disabled={isOnLastPage} onClick={() => goNext()}>
+                <img src={NextIcon} alt='Next page' />
+            </button>
         </div>
     )
 }
